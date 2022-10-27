@@ -1,10 +1,14 @@
-from itertools import permutations
-
 class VigenereCipher:
     def __init__(self):
         self.key_set = {}
         with open('stringsets.txt', 'r') as file:
             lines = file.readlines()
+            """
+            Set the dictionary used for en/decryption in form of
+            Dictionary[key]={'A':'25 letters', 'B':'25 letters', ... }
+            So can be en/decrypted by doing
+            Dictionary[key]['alphabet_to_en/decrypt'][offset] = 'alphabet_en/decrypted'
+            """
             for line in lines:
                 key, random_string = line.strip().split()
                 temp = {}
@@ -12,26 +16,15 @@ class VigenereCipher:
                     key_text = random_string[i+1:len(random_string)] + random_string[0:i]
                     temp[random_string[i]] = key_text
                 self.key_set[key] = temp
-        self.given_p = "THISCIPHERWASWIDELYUSEDBECAUSEOFSIMPLESTRUCTURE"
-        self.given_c = "OYKWUXRNJOOPPTXCTYNYQHFCQNIIWNKPAZQSTIFHOOWEYEHDQQYZMFQDHGZWUQIEZOUJNCEHDQQERBNJKRMRGLWIXVLVPFOBLLAVOPZENPADJPKVMMMPDYXJCBWEX "
-
-
-
-
-    def encrypt(self, plaintext, keys, offset):
-        expanded_key = keys * (len(plaintext) // len(keys)) + keys[:len(plaintext) % len(keys)]
-        ciphertext = ""
-        for i in range(len(plaintext)):
-            ciphertext += self.key_set[expanded_key[i]][plaintext[i]][offset-1]
-        return ciphertext
-
-    def guess_encrypt(self, plaintext, keys, offset, desired_ciphertext):
-        for i in range(len(plaintext)):
-            if self.key_set[keys[i]][plaintext[i]][offset - 1] != desired_ciphertext[i]:
-                return False
-        return True
+        self.given_p = "THISCIPHERWASWIDELYUSEDBECAUSEOFSIMPLESTRUCTURE" # originally only 41 letters are given but 'ucture' was inferred
+        self.given_c = "OYKWUXRNJOOPPTXCTYNYQHFCQNIIWNKPAZQSTIFHOOWEYEHDQQYZMFQDHGZWUQIEZOUJNCEHDQQERBNJKRMRGLWIXVLVPFOBLLAVOPZENPADJPKVMMMPDYXJCBWEX"
 
     def narrow_down(self, n=4, start=0):
+        """
+        narrow_down(n, start=0) method returns set of (n keys with offset) that can encrypt
+        plaintext[start:start+n] into ciphertext[start:start+n] properly.
+        e.g) 63 79 81 /10 can encrypt 'THI' into 'OYK', which is the first three letters of the plaintext
+        """
         available_key_offset_pair_at_length_n = {}
         for i in range(1, n+1):
             available_key_offset_pair_at_length_n[i] = []
@@ -64,6 +57,9 @@ class VigenereCipher:
         return uk_set
 
     def narrow_down_offset(self, n=4, start=0, offset=6):
+        """
+        works same as the narrow_down method, while being more efficient since the offset is given
+        """
         available_key_at_length_n = {}
         for i in range(1, n+1):
             available_key_at_length_n[i] = []
